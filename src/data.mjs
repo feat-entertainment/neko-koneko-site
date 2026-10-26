@@ -45,11 +45,15 @@ export function validateNews(news) {
   news.forEach((n, i) => {
     const w = `news.json[${i}]`;
     if (!DATE_RE.test(n.date ?? "")) fail(w, `date が不正: ${n.date}`);
-    if (!isText(n.title)) fail(w, "title がありません");
+    if (!isLocalizedText(n.title)) fail(w, "title がありません(文字列か、言語ごとの文字列 { ja, en, ... })");
     if (n.url != null && !isHttps(n.url) && !/^\/[^/]/.test(n.url)) fail(w, "url は https か / 始まりにしてください");
   });
   return news;
 }
+
+/** 文字列、または { ja: "...", en: "..." } のように言語ごとの空でない文字列(多言語対応) */
+const isLocalizedText = (v) =>
+  isText(v) || (v != null && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length > 0 && Object.values(v).every(isText));
 
 /** 未定の項目は空文字(または省略)でよい。値があるときだけ形式を確かめる */
 const isBlank = (v) => v == null || v === "";
@@ -57,7 +61,8 @@ const isBlank = (v) => v == null || v === "";
 export function validateProfile(profile) {
   if (!profile || typeof profile !== "object") fail("profile.json", "オブジェクトではありません");
   for (const k of ["siteUrl", "x", "companyUrl"]) if (!isBlank(profile[k]) && !isHttps(profile[k])) fail("profile.json", `${k} が https の URL ではありません`);
-  for (const k of ["label", "contactEmail", "profile"]) if (!isBlank(profile[k]) && typeof profile[k] !== "string") fail("profile.json", `${k} が文字列ではありません`);
+  for (const k of ["label", "contactEmail"]) if (!isBlank(profile[k]) && typeof profile[k] !== "string") fail("profile.json", `${k} が文字列ではありません`);
+  if (!isBlank(profile.profile) && !isLocalizedText(profile.profile)) fail("profile.json", "profile は文字列か、言語ごとの文字列 { ja, en, ... } にしてください");
   // AI の英文は HP に出さないとき空(2026-10-27 ユーザー指示)
   if (!isBlank(profile.aiNotice) && typeof profile.aiNotice !== "string") fail("profile.json", "aiNotice が文字列ではありません");
   if (profile.artistLinks != null) {

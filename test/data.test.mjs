@@ -69,3 +69,11 @@ test("loadData は 3 つの JSON を読んで検証する", async () => {
   assert.equal(data.site.releases.length, 2);
   assert.equal(data.profile.x, "https://x.com/neko_example");
 });
+
+test("プロフィール文・お知らせのタイトルは、文字列か言語ごとの文字列のオブジェクト", () => {
+  const prof = { ...fixture().profile, profile: { ja: "あ", en: "a" } };
+  assert.equal(validateProfile(prof), prof);
+  assert.throws(() => validateProfile({ ...prof, profile: { ja: 1 } }), /profile/);
+  assert.deepEqual(validateNews([{ date: "2026-10-01", title: { ja: "あ", en: "a" } }]).length, 1);
+  assert.throws(() => validateNews([{ date: "2026-10-01", title: { en: "" } }]), /title/);
+});

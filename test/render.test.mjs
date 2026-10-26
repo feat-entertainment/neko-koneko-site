@@ -12,10 +12,10 @@ test("html は値をエスケープし raw はそのまま", () => {
   assert.equal(String(html`<p title="${'"<x>'}">${raw("<b>ok</b>")}</p>`), '<p title="&quot;&lt;x&gt;">' + "<b>ok</b></p>");
 });
 
-test("トップ 1 ページ + 404 + 曲ごとのシェア用ページを出力する", () => {
-  assert.deepEqual(Object.keys(render()).sort(), [
-    "404.html", "index.html", "releases/404-humanity/index.html", "releases/cached-emotion/index.html",
-  ]);
+test("言語ごとにトップ + 曲ごとのシェア用ページを出力し、404 は直下に 1 つ", () => {
+  const perLang = ["index.html", "releases/404-humanity/index.html", "releases/cached-emotion/index.html"];
+  const expected = ["404.html", ...["", "en/", "pt/", "zh/", "ko/"].flatMap((d) => perLang.map((f) => d + f))];
+  assert.deepEqual(Object.keys(render()).sort(), expected.sort());
 });
 
 test("トップに Discography・News・Contact のセクションがある", () => {
@@ -96,7 +96,7 @@ test("内部リンクはすべて出力ページ・assets・トップのセク�
   const pages = render();
   const exists = (href) => {
     const [p, frag] = href.replace(/^\//, "").split("#");
-    if (frag) return p === "" && pages["index.html"].includes(`id="${frag}"`);
+    if (frag) return (p === "" || p.endsWith("/")) && (pages[`${p}index.html`] ?? "").includes(`id="${frag}"`);
     return p === "" || p in pages || `${p}index.html` in pages || /^(assets\/|styles\.css(\?v=\w+)?$|main\.js(\?v=\w+)?$)/.test(p);
   };
   for (const [file, page] of Object.entries(pages)) {
@@ -159,7 +159,7 @@ test("アーティスト紹介に顔(ロゴ)・名前・プロフィール文を
 
 test("まだ決まっていない情報(X・連絡先・HP の URL・リリース)は出さず、壊れない", () => {
   const pages = render(emptyFixture());
-  assert.deepEqual(Object.keys(pages).sort(), ["404.html", "index.html"]);
+  assert.deepEqual(Object.keys(pages).sort(), ["404.html", "en/index.html", "index.html", "ko/index.html", "pt/index.html", "zh/index.html"]);
   for (const [file, page] of Object.entries(pages)) {
     assert.doesNotMatch(page, /x\.com/, `${file} に X のリンクがある`);
     assert.doesNotMatch(page, /mailto:/, `${file} に mailto がある`);
@@ -193,4 +193,49 @@ test("AI の英文(aiNotice)が空なら、どのページにも出さず説明�
     assert.doesNotMatch(page, /content=""/, `${file} に空の meta がある`);
   }
   assert.match(render(f)["index.html"], /<meta name="description" content="NEKO KONEKO Official Site">/);
+});
+
+test("各言語のページは html の lang・言語の切り替え(同じページの 5 言語)・hreflang を持つ", () => {
+  const pages = render();
+  const langs = [["", "ja"], ["en/", "en"], ["pt/", "pt-BR"], ["zh/", "zh-Hans"], ["ko/", "ko"]];
+  for (const [dir, lang] of langs) {
+    for (const rest of ["", "releases/cached-emotion/"]) {
+      const page = pages[`${dir}${rest}index.html`];
+      assert.match(page, new RegExp(`<html lang="${lang}">`));
+      const sw = page.match(/<nav class="lang-switch"[^>]*>([\s\S]*?)<\/nav>/);
+      assert.ok(sw, `${dir}${rest} に言語の切り替えが無い`);
+      for (const [d] of langs) assert.ok(sw[1].includes(`href="/${d}${rest}"`), `${dir}${rest} → /${d}${rest} が無い`);
+      assert.match(sw[1], new RegExp(`href="/${dir}${rest}"[^>]*aria-current="page"`));
+      for (const [d, l] of langs) {
+        assert.ok(page.includes(`<link rel="alternate" hreflang="${l}" href="https://neko-koneko.example/${d}${rest}">`), `${dir}${rest} に hreflang ${l} が無い`);
+      }
+      assert.ok(page.includes(`<link rel="alternate" hreflang="x-default" href="https://neko-koneko.example/${rest}">`));
+    }
+  }
+});
+
+test("各言語のページは、その言語の文とリンク先を使う", () => {
+  const pages = render(emptyFixture());
+  assert.match(pages["index.html"], /配信日が決まった曲から/);
+  assert.match(pages["en/index.html"], /Songs will appear here once their release dates are set\./);
+  assert.match(pages["pt/index.html"], /Ainda não há novidades\./);
+  assert.match(pages["zh/index.html"], /暂无消息。/);
+  assert.match(pages["ko/index.html"], /아직 소식이 없습니다\./);
+  const ko = render()["ko/index.html"];
+  assert.match(ko, /href="\/ko\/#discography"/);
+  assert.match(ko, /<a class="card-art" href="\/ko\/releases\/cached-emotion\/">/);
+  assert.match(ko, /공개 예정/);
+  assert.match(render()["en/releases/cached-emotion/index.html"], /href="\/en\/#discography"/);
+});
+
+test("プロフィール文とお知らせは言語ごとに書け、無い言語は日本語を出す", () => {
+  const f = fixture();
+  f.profile.profile = { ja: "日本語のプロフィール", en: "English profile" };
+  f.news = [{ date: "2026-10-01", title: { ja: "日本語のお知らせ", en: "English news" } }];
+  const pages = render(f);
+  assert.match(pages["en/index.html"], /English profile/);
+  assert.match(pages["en/index.html"], /English news/);
+  assert.match(pages["pt/index.html"], /日本語のプロフィール/);
+  assert.match(pages["pt/index.html"], /日本語のお知らせ/);
+  assert.match(pages["index.html"], /日本語のプロフィール/);
 });

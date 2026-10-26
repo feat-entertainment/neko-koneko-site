@@ -111,3 +111,17 @@ a:not(.btn) > .icon { display: inline-block; vertical-align: -0.18em; margin-rig
   .nav { gap: 8px; font-size: 0.72rem; }
   .news li { grid-template-columns: 1fr; gap: 2px; }
 }
+
+/* 言語の切り替え(ヘッダー右端) */
+.lang-switch { display: flex; flex-wrap: wrap; gap: 4px; font-size: 0.78rem; }
+.lang-switch a { padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: var(--chrome); white-space: nowrap; }
+.lang-switch a:hover { border-color: var(--accent); color: var(--accent); }
+.lang-switch a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* 中国語・韓国語のページは、その言語の字形のフォントを優先する(日本語用フォントだと字形が日本式になるため) */
+html:lang(zh-Hans) body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", var(--font); }
+html:lang(ko) body { font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", var(--font); }
+/* スマホ幅: ロゴを 1 行目、メニューと言語の切り替えを 2 行目以降に折り返す(横にはみ出さないように) */
+@media (max-width: 640px) {
+  .brand { flex: 1 1 100%; }
+  .nav { flex: 1 1 auto; }
+}
