@@ -174,3 +174,12 @@ test("まだ決まっていない情報(X・連絡先・HP の URL・リリー�
   assert.match(top, /<section class="artist" id="artist">[\s\S]*?NEKO KONEKO/);
   assert.match(top, /© \d{4} NEKO KONEKO/);
 });
+
+test("HP の URL が未定なら、曲ページでも大きい画像のカード指定にしない(画像の絶対 URL が無いため)", () => {
+  const f = fixture();
+  f.profile.siteUrl = "";
+  const page = render(f)["releases/cached-emotion/index.html"];
+  assert.doesNotMatch(page, /property="og:image"/);
+  assert.match(page, /<meta name="twitter:card" content="summary">/);
+  assert.match(render()["releases/cached-emotion/index.html"], /<meta name="twitter:card" content="summary_large_image">/);
+});

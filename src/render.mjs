@@ -41,7 +41,7 @@ function layout(ctx, { path, title, description, image, body }) {
 <meta property="og:description" content="${desc}">
 ${ogUrl ? html`<meta property="og:url" content="${ogUrl}">` : ""}
 ${ogImage ? html`<meta property="og:image" content="${ogImage}">` : ""}
-<meta name="twitter:card" content="${image ? "summary_large_image" : "summary"}">
+<meta name="twitter:card" content="${image && ogImage ? "summary_large_image" : "summary"}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Noto+Sans+JP:wght@400;700&display=swap">
