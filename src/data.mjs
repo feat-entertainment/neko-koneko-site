@@ -58,7 +58,8 @@ export function validateProfile(profile) {
   if (!profile || typeof profile !== "object") fail("profile.json", "オブジェクトではありません");
   for (const k of ["siteUrl", "x", "companyUrl"]) if (!isBlank(profile[k]) && !isHttps(profile[k])) fail("profile.json", `${k} が https の URL ではありません`);
   for (const k of ["label", "contactEmail", "profile"]) if (!isBlank(profile[k]) && typeof profile[k] !== "string") fail("profile.json", `${k} が文字列ではありません`);
-  if (!isText(profile.aiNotice)) fail("profile.json", "aiNotice がありません");
+  // AI の英文は HP に出さないとき空(2026-10-27 ユーザー指示)
+  if (!isBlank(profile.aiNotice) && typeof profile.aiNotice !== "string") fail("profile.json", "aiNotice が文字列ではありません");
   if (profile.artistLinks != null) {
     if (!Array.isArray(profile.artistLinks)) fail("profile.json", "artistLinks が配列ではありません");
     profile.artistLinks.forEach((l, i) => {

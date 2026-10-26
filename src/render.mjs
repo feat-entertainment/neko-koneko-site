@@ -23,7 +23,7 @@ function layout(ctx, { path, title, description, image, body }) {
   const { site, profile } = ctx;
   const name = site.artist.name;
   const fullTitle = title ? `${title} | ${name}` : `${name} Official Site`;
-  const desc = description ?? profile.aiNotice;
+  const desc = description ?? (profile.aiNotice || `${name} Official Site`);
   const img = image ?? site.artist.logo;
   const ogImage = img ? absUrl(profile, `/${img}`) : null;
   const ogUrl = absUrl(profile, path);
@@ -62,7 +62,7 @@ ${ogImage ? html`<meta property="og:image" content="${ogImage}">` : ""}
 ${body}
 </main>
 <footer class="site-footer">
-  <p class="ai-notice" lang="en">${profile.aiNotice}</p>
+  ${profile.aiNotice ? html`<p class="ai-notice" lang="en">${profile.aiNotice}</p>` : ""}
   <p class="footer-links">${[xLink(profile), ...(profile.artistLinks ?? []).map((l) => ext(l.url, l.platform, "", platformIcon(l.platform)))].filter(Boolean).map((a, i) => (i ? html` · ${a}` : a))}</p>
   <p class="copyright">© ${ctx.today.slice(0, 4)} ${profile.label || name}</p>
 </footer>
@@ -145,10 +145,10 @@ ${hero ? html`<section ${withClass(stateAttrs(hero, today), "hero")} id="top">
   </div>
 </section>` : ""}
 ${artistSection(ctx)}
-<section class="intro">
-  <p class="ai-notice" lang="en">${profile.aiNotice}</p>
+${profile.aiNotice || profile.x || profile.artistLinks?.length ? html`<section class="intro">
+  ${profile.aiNotice ? html`<p class="ai-notice" lang="en">${profile.aiNotice}</p>` : ""}
   ${profile.x || profile.artistLinks?.length ? html`<p class="intro-links">${xLink(profile, profile.x ? `Follow ${xHandle(profile.x)} on X` : "", "btn")}${artistLinkButtons(profile)}</p>` : ""}
-</section>
+</section>` : ""}
 <section class="section" id="discography">
   <h2 class="section-title">Discography</h2>
   ${sorted.length ? html`<ul class="cards">${sorted.map((r) => card(r, today))}</ul>` : html`<p class="muted">配信日が決まった曲から、ここに掲載します。</p>`}
@@ -181,7 +181,7 @@ function releasePage(ctx, r) {
     ${upcomingBlock(r)}
     <div class="when-released">${linkList(r)}</div>
     <p>${ext(xShareUrl(shareText, pageUrl), "Share on X", "btn", "x")}</p>
-    <p class="ai-notice small" lang="en">${profile.aiNotice}</p>
+    ${profile.aiNotice ? html`<p class="ai-notice small" lang="en">${profile.aiNotice}</p>` : ""}
     <p><a class="back" href="/#discography">← Discography</a></p>
   </div>
 </article>`;

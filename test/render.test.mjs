@@ -183,3 +183,14 @@ test("HP の URL が未定なら、曲ページでも大きい画像のカード
   assert.match(page, /<meta name="twitter:card" content="summary">/);
   assert.match(render()["releases/cached-emotion/index.html"], /<meta name="twitter:card" content="summary_large_image">/);
 });
+
+test("AI の英文(aiNotice)が空なら、どのページにも出さず説明文はサイト名にする", () => {
+  const f = fixture();
+  f.profile.aiNotice = "";
+  for (const [file, page] of Object.entries(render(f))) {
+    assert.doesNotMatch(page, /class="ai-notice/, `${file} に AI の英文の欄がある`);
+    assert.doesNotMatch(page, /generated using AI/, `${file} に AI の英文がある`);
+    assert.doesNotMatch(page, /content=""/, `${file} に空の meta がある`);
+  }
+  assert.match(render(f)["index.html"], /<meta name="description" content="NEKO KONEKO Official Site">/);
+});

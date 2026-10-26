@@ -6,7 +6,7 @@ export function emptyFixture() {
   const f = fixture();
   f.site.releases = [];
   f.news = [];
-  f.profile = { siteUrl: "", x: "", label: "", contactEmail: "", companyUrl: "", profile: "", artistLinks: [], aiNotice: f.profile.aiNotice };
+  f.profile = { siteUrl: "", x: "", label: "", contactEmail: "", companyUrl: "", profile: "", artistLinks: [], aiNotice: "" };
   return f;
 }
 

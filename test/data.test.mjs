@@ -49,8 +49,11 @@ test("news / profile の不正", () => {
   assert.throws(() => validateNews([{ date: "2026-1-1", title: "x" }]), /news.json\[0\]: date/);
   assert.throws(() => validateNews([{ date: "2026-10-01", title: "x", url: "javascript:x" }]), /url/);
   const p = fixture().profile;
-  p.aiNotice = "";
+  p.aiNotice = 1;
   assert.throws(() => validateProfile(p), /aiNotice/);
+  const blank = fixture().profile;
+  blank.aiNotice = "";
+  assert.equal(validateProfile(blank), blank); // HP に出さない(2026-10-27 ユーザー指示)ときは空
   const q = fixture().profile;
   q.artistLinks[0].url = "http://example.com";
   assert.throws(() => validateProfile(q), /artistLinks\[0\]/);
