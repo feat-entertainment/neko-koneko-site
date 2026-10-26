@@ -1,9 +1,20 @@
 {
-  "generatedAt": "2026-10-26T16:41:07.379Z",
+  "generatedAt": "2026-10-26T21:24:41.464Z",
   "artist": {
     "name": "NEKO KONEKO",
     "reading": null,
     "logo": "assets/logo.jpg"
   },
-  "releases": []
+  "releases": [
+    {
+      "slug": "nannimo-nai",
+      "title": "NANNIMO-NAI",
+      "titleEn": null,
+      "type": "Single",
+      "releaseDate": "2026-10-30",
+      "artwork": "assets/artwork/nannimo-nai.jpg",
+      "preSaveUrl": null,
+      "links": []
+    }
+  ]
 }

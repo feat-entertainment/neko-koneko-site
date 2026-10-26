@@ -14,14 +14,14 @@ async function setup(data) {
   return { root, outDir: path.join(root, "site") };
 }
 
-test("ページ・アセットを出力する(CNAME が無いリポジトリでは出さない)", async () => {
+test("ページ・アセット・CNAME を出力する", async () => {
   const { root, outDir } = await setup();
   const files = await build({ root, outDir, today: "2026-10-12" });
   assert.ok(files.includes("releases/cached-emotion/index.html"));
-  for (const f of ["index.html", "styles.css", "main.js", ".nojekyll", "assets/logo.png", "assets/artwork/404-humanity.jpg"]) {
+  for (const f of ["index.html", "styles.css", "main.js", "CNAME", ".nojekyll", "assets/logo.png", "assets/artwork/404-humanity.jpg"]) {
     await access(path.join(outDir, f));
   }
-  await assert.rejects(access(path.join(outDir, "CNAME")));
+  assert.equal((await readFile(path.join(outDir, "CNAME"), "utf8")).trim(), "nekokoneko.feat-entertainment.com");
 });
 
 test("CSS / JS の URL に中身のハッシュを付け、キャッシュされた古い版を使わせない", async () => {
