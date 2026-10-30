@@ -46,10 +46,20 @@ export function validateSite(site) {
 
 export function validateNews(news) {
   if (!Array.isArray(news)) fail("news.json", "配列ではありません");
+  const slugs = new Set();
   news.forEach((n, i) => {
     const w = `news.json[${i}]`;
     if (!DATE_RE.test(n.date ?? "")) fail(w, `date が不正: ${n.date}`);
     if (!isLocalizedText(n.title)) fail(w, "title がありません(文字列か、言語ごとの文字列 { ja, en, ... })");
+    if (n.body != null && !isLocalizedText(n.body)) fail(w, "body は文字列か、言語ごとの文字列 { ja, en, ... } にしてください");
+    // slug があるお知らせは news/<slug>/ に全文のページを作る(一覧は冒頭だけ)
+    if (n.slug != null) {
+      if (!SLUG_RE.test(n.slug)) fail(w, `slug が不正: ${n.slug}`);
+      if (slugs.has(n.slug)) fail(w, `slug が重複: ${n.slug}`);
+      if (n.body == null) fail(w, "slug があるお知らせには body(本文)が必要です");
+      if (n.url != null) fail(w, "slug と url は同時に指定できません");
+      slugs.add(n.slug);
+    }
     if (n.url != null && !isHttps(n.url) && !/^\/[^/]/.test(n.url)) fail(w, "url は https か / 始まりにしてください");
   });
   return news;

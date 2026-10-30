@@ -91,6 +91,12 @@ a:not(.btn) > .icon { display: inline-block; vertical-align: -0.18em; margin-rig
 .news li { display: grid; grid-template-columns: 7em 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .news time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .news p { margin: 4px 0 0; color: var(--muted); }
+.news .more { color: var(--accent); white-space: nowrap; }
+.news-article { max-width: 720px; margin: 0 auto; }
+.news-article time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.news-title { font-family: var(--display); font-weight: 400; font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.35; margin: 8px 0 24px; }
+.news-body p { margin: 0 0 1.2em; line-height: 1.9; }
+.news-body strong { color: var(--accent); }
 .back { color: var(--muted); }
 .card-art { display: block; }
 .card-art img { transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }

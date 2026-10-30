@@ -90,3 +90,12 @@ test("releaseDate は日付か null(配信日未定)、youtubeId は 11 文字�
     assert.throws(() => validateSite(bad.site), new RegExp(k));
   }
 });
+
+test("お知らせの slug は形式・重複・本文の有無・url との同時指定を確かめる", () => {
+  const n = (o) => ({ date: "2026-10-01", title: "x", body: "本文", ...o });
+  assert.equal(validateNews([n({ slug: "a" }), n({ slug: "b" })]).length, 2);
+  assert.throws(() => validateNews([n({ slug: "A B" })]), /slug が不正/);
+  assert.throws(() => validateNews([n({ slug: "a" }), n({ slug: "a" })]), /slug が重複/);
+  assert.throws(() => validateNews([n({ slug: "a", body: undefined })]), /body/);
+  assert.throws(() => validateNews([n({ slug: "a", url: "https://x.example" })]), /url/);
+});

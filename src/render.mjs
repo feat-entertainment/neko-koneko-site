@@ -134,19 +134,52 @@ function card(r, today, lang) {
 </li>`;
 }
 
+const newsRest = (n) => `news/${n.slug}/`;
+/** 本文の書式: 空行で段落、改行は <br>、**太字**。HTML は書けない(すべてエスケープ) */
+function richText(text) {
+  const inline = (line) => line.split(/\*\*(.+?)\*\*/).map((part, i) => (i % 2 ? html`<strong>${part}</strong>` : html`${part}`));
+  return text
+    .trim()
+    .split(/\r?\n\s*\n/)
+    .map((para) => html`<p>${para.split(/\r?\n/).map((line, i) => (i ? html`<br>${inline(line)}` : inline(line)))}</p>`);
+}
+/** 一覧に出す冒頭: 書式を外した本文の最初の EXCERPT_LENGTH 文字 */
+const EXCERPT_LENGTH = 60;
+function excerpt(text) {
+  const plain = text.replaceAll("**", "").replace(/\s+/g, " ").trim();
+  return [...plain].length > EXCERPT_LENGTH ? `${[...plain].slice(0, EXCERPT_LENGTH).join("")}…` : plain;
+}
+
 export function newsItems(site, news, today, lang = DEFAULT_LANG) {
   const auto = site.releases
     .filter((r) => isReleased(r, today))
     .map((r) => ({ date: r.releaseDate, title: t(lang).released(r.type, r.title), url: `${langPath(lang)}#${r.slug}` }));
-  const manual = news.filter((n) => n.date <= today).map((n) => ({ ...n, title: pick(n.title, lang), body: n.body == null ? n.body : pick(n.body, lang) }));
+  const manual = news
+    .filter((n) => n.date <= today)
+    .map((n) => ({ ...n, title: pick(n.title, lang), body: n.body == null ? n.body : pick(n.body, lang), ...(n.slug ? { url: langPath(lang, newsRest(n)) } : {}) }));
   return [...auto, ...manual].sort(byDateDesc);
 }
 
-function newsList(items) {
+function newsList(items, tr) {
   return html`<ul class="news">${items.map((n) => html`<li>
   <time datetime="${n.date}">${fmtDate(n.date)}</time>
-  <div>${n.url ? html`<a href="${n.url}">${n.title}</a>` : n.title}${n.body ? html`<p>${n.body}</p>` : ""}</div>
+  <div>${n.url ? html`<a href="${n.url}">${n.title}</a>` : n.title}${n.body ? (n.slug ? html`<p>${excerpt(n.body)} <a class="more" href="${n.url}">${tr.readMore} →</a></p>` : html`<p>${n.body}</p>`) : ""}</div>
 </li>`)}</ul>`;
+}
+
+/** お知らせの全文ページ(slug のあるお知らせだけ) */
+function newsPage(ctx, n) {
+  const { lang } = ctx;
+  const title = pick(n.title, lang);
+  const body = pick(n.body, lang);
+  const content = html`<article class="news-article">
+  <p class="eyebrow">News</p>
+  <time datetime="${n.date}">${fmtDate(n.date)}</time>
+  <h1 class="news-title">${title}</h1>
+  <div class="news-body">${richText(body)}</div>
+  <p><a class="back" href="${langPath(lang)}#news">← News</a></p>
+</article>`;
+  return layout(ctx, { rest: newsRest(n), title, description: excerpt(body), body: content });
 }
 
 /** アーティスト紹介: 顔(ロゴ)・名前・プロフィール文(未定なら名前と顔だけ) */
@@ -192,7 +225,7 @@ ${profile.aiNotice || profile.x || profile.artistLinks?.length ? html`<section c
 </section>
 <section class="section" id="news">
   <h2 class="section-title">News</h2>
-  ${news.length ? newsList(news) : html`<p class="muted">${tr.emptyNews}</p>`}
+  ${news.length ? newsList(news, tr) : html`<p class="muted">${tr.emptyNews}</p>`}
 </section>
 ${hasContact(profile) ? html`<section class="section contact" id="contact">
   <h2 class="section-title">Contact</h2>
@@ -242,6 +275,8 @@ export function renderSite(ctx) {
     const c = { ...ctx, lang };
     pages[`${lang.dir}index.html`] = homePage(c);
     for (const r of ctx.site.releases) pages[`${lang.dir}${releaseRest(r)}index.html`] = releasePage(c, r);
+    // 掲載日を迎えたお知らせだけページにする(未来の日付は毎日の再ビルドで出る)
+    for (const n of ctx.news) if (n.slug && n.date <= ctx.today) pages[`${lang.dir}${newsRest(n)}index.html`] = newsPage(c, n);
   }
   return pages;
 }

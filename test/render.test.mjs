@@ -282,3 +282,24 @@ test("YouTube のアーティストページには YouTube のアイコンを付
   f.profile.artistLinks = [{ platform: "YouTube", url: "https://www.youtube.com/channel/UC_hSxvG2orTDnlY3mt1aGcw" }];
   assert.match(render(f)["index.html"], /href="https:\/\/www.youtube.com\/channel\/UC_hSxvG2orTDnlY3mt1aGcw"[^>]*><svg[^>]*><path d="M23.498/);
 });
+
+test("slug のあるお知らせは、一覧に冒頭と「続きを読む」だけ出し、全文は言語ごとの news/<slug>/ ページに出す", () => {
+  const f = fixture();
+  f.news = [{
+    date: "2026-10-05", slug: "hello",
+    title: { ja: "お知らせ<1>", en: "News <1>" },
+    body: { ja: "一段落目の本文です。".repeat(10) + "\n\n**太字** と <b>タグ</b>\n二行目", en: "First paragraph." },
+  }];
+  const pages = render(f);
+  const top = pages["index.html"];
+  assert.match(top, /<a href="\/news\/hello\/">お知らせ&lt;1&gt;<\/a>/);
+  assert.match(top, /<p>(一段落目の本文です。){6}… <a class="more" href="\/news\/hello\/">続きを読む →<\/a><\/p>/);
+  assert.doesNotMatch(top, /太字/);
+  const page = pages["news/hello/index.html"];
+  assert.match(page, /<h1 class="news-title">お知らせ&lt;1&gt;<\/h1>/);
+  assert.match(page, /<p><strong>太字<\/strong> と &lt;b&gt;タグ&lt;\/b&gt;<br>二行目<\/p>/);
+  assert.match(pages["en/news/hello/index.html"], /<a class="more"|<p>First paragraph.<\/p>/);
+  assert.match(pages["en/index.html"], /First paragraph. <a class="more" href="\/en\/news\/hello\/">Read more →<\/a>/);
+  // 掲載日前のお知らせはページを作らない
+  assert.equal(render(f, "2026-10-04")["news/hello/index.html"], undefined);
+});

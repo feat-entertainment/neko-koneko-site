@@ -18,6 +18,7 @@ export const langPath = (lang, rest = "") => `/${lang.dir}${rest}`;
 
 const T = {
   ja: {
+    readMore: "続きを読む",
     siteTitle: (n) => `${n} Official Site`,
     latest: "Latest Release",
     comingSoon: "Coming Soon",
@@ -35,6 +36,7 @@ const T = {
     languageMenu: "言語",
   },
   en: {
+    readMore: "Read more",
     siteTitle: (n) => `${n} Official Site`,
     latest: "Latest Release",
     comingSoon: "Coming Soon",
@@ -52,6 +54,7 @@ const T = {
     languageMenu: "Language",
   },
   pt: {
+    readMore: "Leia mais",
     siteTitle: (n) => `${n} Site Oficial`,
     latest: "Último lançamento",
     comingSoon: "Em breve",
@@ -69,6 +72,7 @@ const T = {
     languageMenu: "Idioma",
   },
   zh: {
+    readMore: "阅读全文",
     siteTitle: (n) => `${n} 官方网站`,
     latest: "最新作品",
     comingSoon: "即将发行",
@@ -86,6 +90,7 @@ const T = {
     languageMenu: "语言",
   },
   ko: {
+    readMore: "자세히 보기",
     siteTitle: (n) => `${n} 공식 사이트`,
     latest: "최신 발매",
     comingSoon: "공개 예정",
