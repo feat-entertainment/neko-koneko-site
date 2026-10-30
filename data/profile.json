@@ -5,6 +5,11 @@
   "contactEmail": "",
   "companyUrl": "",
   "profile": "",
-  "artistLinks": [],
+  "artistLinks": [
+    {
+      "platform": "YouTube",
+      "url": "https://www.youtube.com/channel/UC_hSxvG2orTDnlY3mt1aGcw"
+    }
+  ],
   "aiNotice": ""
 }

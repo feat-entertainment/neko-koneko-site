@@ -45,6 +45,10 @@ img { display: block; max-width: 100%; height: auto; }
 .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 1.05; margin: 8px 0; color: var(--accent); text-shadow: 0 0 18px var(--glow); text-wrap: balance; overflow-wrap: anywhere; }
 .title-en { color: var(--chrome); margin: 0; }
 .release-date { color: var(--chrome); }
+/* 配信日未定(COMING SOON)は常に未配信の表示 */
+.is-tba .when-released { display: none; }
+.video { margin: 32px 0 0; }
+.video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 6px; box-shadow: 0 0 0 1px var(--line), 0 0 32px var(--glow); }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border: 1px solid var(--chrome); border-radius: 999px; text-decoration: none; font-size: 0.9rem; transition: background 0.15s, color 0.15s, border-color 0.15s; }
 .btn:hover { border-color: var(--accent); color: var(--accent); }

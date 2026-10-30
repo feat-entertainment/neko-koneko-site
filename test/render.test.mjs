@@ -240,3 +240,45 @@ test("プロフィール文とお知らせは言語ごとに書け、無い言�
   assert.match(pages["pt/index.html"], /日本語のお知らせ/);
   assert.match(pages["index.html"], /日本語のプロフィール/);
 });
+
+/** 配信日未定(COMING SOON)の曲と、YouTube 動画つきの曲を足したデータ */
+function tbaFixture() {
+  const f = fixture();
+  f.site.releases[0].youtubeId = "Nj4Vc3hO-H4";
+  f.site.releases.push({ slug: "mada-mada", title: "MADA-MADA", titleEn: null, type: "Single", releaseDate: null, artwork: "assets/artwork/mada-mada.jpg", preSaveUrl: null, links: [], youtubeId: null });
+  return f;
+}
+
+test("配信日未定の曲は Coming Soon と出し、カウントダウン・配信日の属性を持たず、Discography の先頭に並ぶ", () => {
+  const top = render(tbaFixture())["index.html"];
+  const card = top.match(/<li class="card is-tba" id="mada-mada">[\s\S]*?<\/li>/)?.[0];
+  assert.ok(card, "MADA-MADA のカードがない");
+  assert.match(card, /Single · Coming Soon/);
+  assert.doesNotMatch(card, /data-countdown|data-release-date/);
+  assert.ok(top.indexOf('id="mada-mada"') < top.indexOf('id="404-humanity"'));
+  // 配信済みの曲があればヒーローはそちら
+  assert.match(top, /<section class="hero is-released" data-release-date="2026-10-09" id="top">/);
+  // 曲ページはバッジの Coming Soon だけ(日付の行は出さない)
+  const page = render(tbaFixture())["en/releases/mada-mada/index.html"];
+  assert.doesNotMatch(page, /class="release-date"/);
+  assert.match(page, /<p class="badge">Coming Soon<\/p>/);
+});
+
+test("配信済みの曲が無いときのヒーローは、配信日の決まった一番早い曲(未定の曲ではない)", () => {
+  const top = render(tbaFixture(), "2026-10-01")["index.html"];
+  assert.match(top, /<section class="hero" data-release-date="2026-10-09" id="top">/);
+});
+
+test("youtubeId がある曲は、トップ(ヒーロー)と曲ページに youtube-nocookie で埋め込む", () => {
+  const pages = render(tbaFixture());
+  for (const p of ["index.html", "releases/cached-emotion/index.html"]) {
+    assert.match(pages[p], /<iframe src="https:\/\/www.youtube-nocookie.com\/embed\/Nj4Vc3hO-H4" title="感情コピー \(YouTube\)"/);
+  }
+  assert.doesNotMatch(pages["releases/404-humanity/index.html"], /<iframe/);
+});
+
+test("YouTube のアーティストページには YouTube のアイコンを付ける", () => {
+  const f = fixture();
+  f.profile.artistLinks = [{ platform: "YouTube", url: "https://www.youtube.com/channel/UC_hSxvG2orTDnlY3mt1aGcw" }];
+  assert.match(render(f)["index.html"], /href="https:\/\/www.youtube.com\/channel\/UC_hSxvG2orTDnlY3mt1aGcw"[^>]*><svg[^>]*><path d="M23.498/);
+});

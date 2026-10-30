@@ -17,7 +17,10 @@ export function jstToday(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-export const isReleased = (release, today) => release.releaseDate <= today;
+const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+
+/** releaseDate が null は配信日未定(COMING SOON)。未定はまだ配信していない扱い */
+export const isReleased = (release, today) => release.releaseDate != null && release.releaseDate <= today;
 
 export function validateSite(site) {
   if (!site || !Array.isArray(site.releases)) fail("site.json", "releases が配列ではありません");
@@ -25,12 +28,13 @@ export function validateSite(site) {
   const slugs = new Set();
   site.releases.forEach((r, i) => {
     const w = `site.json releases[${i}]`;
-    for (const k of ["slug", "title", "type", "releaseDate", "artwork"]) if (!isText(r[k])) fail(w, `${k} がありません`);
+    for (const k of ["slug", "title", "type", "artwork"]) if (!isText(r[k])) fail(w, `${k} がありません`);
     if (!SLUG_RE.test(r.slug)) fail(w, `slug が不正: ${r.slug}`);
     if (slugs.has(r.slug)) fail(w, `slug が重複: ${r.slug}`);
     slugs.add(r.slug);
     if (!TYPES.includes(r.type)) fail(w, `type が不正: ${r.type}`);
-    if (!DATE_RE.test(r.releaseDate)) fail(w, `releaseDate が不正: ${r.releaseDate}`);
+    if (r.releaseDate !== null && !DATE_RE.test(r.releaseDate ?? "")) fail(w, `releaseDate が不正(日付か、未定なら null): ${r.releaseDate}`);
+    if (r.youtubeId != null && !YOUTUBE_ID_RE.test(r.youtubeId)) fail(w, `youtubeId が不正: ${r.youtubeId}`);
     if (r.preSaveUrl != null && !isHttps(r.preSaveUrl)) fail(w, "preSaveUrl が https の URL ではありません");
     if (!Array.isArray(r.links)) fail(w, "links が配列ではありません");
     r.links.forEach((l, j) => {

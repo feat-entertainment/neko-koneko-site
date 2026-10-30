@@ -77,3 +77,16 @@ test("プロフィール文・お知らせのタイトルは、文字列か言�
   assert.deepEqual(validateNews([{ date: "2026-10-01", title: { ja: "あ", en: "a" } }]).length, 1);
   assert.throws(() => validateNews([{ date: "2026-10-01", title: { en: "" } }]), /title/);
 });
+
+test("releaseDate は日付か null(配信日未定)、youtubeId は 11 文字の動画 ID", () => {
+  const ok = fixture();
+  ok.site.releases[1].releaseDate = null;
+  ok.site.releases[0].youtubeId = "Nj4Vc3hO-H4";
+  assert.doesNotThrow(() => validateSite(ok.site));
+  assert.equal(isReleased({ releaseDate: null }, "2026-10-12"), false);
+  for (const [k, v] of [["releaseDate", undefined], ["releaseDate", "2026/10/30"], ["youtubeId", "https://youtu.be/Nj4Vc3hO-H4"]]) {
+    const bad = fixture();
+    bad.site.releases[0][k] = v;
+    assert.throws(() => validateSite(bad.site), new RegExp(k));
+  }
+});

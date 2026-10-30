@@ -7,9 +7,13 @@ import { html, raw } from "./html.mjs";
 import { icon, platformIcon } from "./icons.mjs";
 
 const fmtDate = (d) => d.replaceAll("-", ".");
+/** 配信日の表示。未定(null)は「Coming Soon」 */
+const fmtRelease = (r, tr) => (r.releaseDate ? fmtDate(r.releaseDate) : tr.comingSoon);
 const releaseRest = (r) => `releases/${r.slug}/`;
 const xShareUrl = (text, url) => `https://x.com/intent/post?${new URLSearchParams(url ? { text, url } : { text })}`;
-const byDateDesc = (a, b) => (a.date ?? a.releaseDate) < (b.date ?? b.releaseDate) ? 1 : (a.date ?? a.releaseDate) > (b.date ?? b.releaseDate) ? -1 : 0;
+// 配信日未定(null)のリリースは一番新しい扱い(先頭に並ぶ)
+const sortKey = (x) => x.date ?? x.releaseDate ?? "9999-99-99";
+const byDateDesc = (a, b) => (sortKey(a) < sortKey(b) ? 1 : sortKey(a) > sortKey(b) ? -1 : 0);
 const ext = (href, label, cls = "", iconName = null) =>
   html`<a class="${cls}" href="${href}" target="_blank" rel="noopener">${iconName ? icon(iconName) : ""}${label}</a>`;
 const xHandle = (url) => `@${url.replace(/\/+$/, "").split("/").pop()}`;
@@ -95,7 +99,9 @@ function linkList(r, tr) {
   return "";
 }
 
+/** 配信日未定のときは data-release-date を出さない(main.js が配信済みに切り替えないように)。常に未配信の表示 */
 function stateAttrs(r, today) {
+  if (!r.releaseDate) return raw(`class="%CLS% is-tba"`);
   return raw(`class="%CLS%${isReleased(r, today) ? " is-released" : ""}" data-release-date="${r.releaseDate}"`);
 }
 const withClass = (attrs, cls) => raw(String(attrs).replace("%CLS%", cls));
@@ -103,9 +109,17 @@ const withClass = (attrs, cls) => raw(String(attrs).replace("%CLS%", cls));
 function upcomingBlock(r, tr) {
   return html`<div class="when-upcoming">
   <p class="badge">${tr.comingSoon}</p>
-  <p class="countdown" data-countdown="${r.releaseDate}"></p>
+  ${r.releaseDate ? html`<p class="countdown" data-countdown="${r.releaseDate}"></p>` : ""}
   ${r.preSaveUrl ? html`<p>${ext(r.preSaveUrl, tr.preSave, "btn btn-primary", "note")}</p>` : ""}
 </div>`;
+}
+
+/** YouTube 動画の埋め込み(youtubeId があるときだけ)。クッキーを使わない youtube-nocookie.com を使う */
+function videoBlock(r) {
+  if (!r.youtubeId) return "";
+  return html`<section class="video">
+  <iframe src="https://www.youtube-nocookie.com/embed/${r.youtubeId}" title="${r.title} (YouTube)" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</section>`;
 }
 
 function card(r, today, lang) {
@@ -114,7 +128,7 @@ function card(r, today, lang) {
   <a class="card-art" href="${langPath(lang, releaseRest(r))}"><img src="/${r.artwork}" alt="${r.title}" loading="lazy" width="600" height="600"></a>
   <span class="card-title">${r.title}</span>
   ${r.titleEn && r.titleEn !== r.title ? html`<span class="card-title-en" lang="en">${r.titleEn}</span>` : ""}
-  <span class="card-meta">${r.type} · ${fmtDate(r.releaseDate)}</span>
+  <span class="card-meta">${r.type} · ${fmtRelease(r, tr)}</span>
   ${upcomingBlock(r, tr)}
   <div class="when-released">${linkList(r, tr)}</div>
 </li>`;
@@ -161,11 +175,12 @@ ${hero ? html`<section ${withClass(stateAttrs(hero, today), "hero")} id="top">
   <div class="hero-info">
     <p class="eyebrow"><span class="when-released">${tr.latest}</span><span class="when-upcoming">${tr.comingSoon}</span></p>
     <h1 class="title">${hero.title}</h1>
-    <p class="release-date">${hero.type} · ${fmtDate(hero.releaseDate)}</p>
+    <p class="release-date">${hero.type} · ${fmtRelease(hero, tr)}</p>
     ${upcomingBlock(hero, tr)}
     <div class="when-released">${linkList(hero, tr)}</div>
   </div>
-</section>` : ""}
+</section>
+${videoBlock(hero)}` : ""}
 ${artistSection(ctx)}
 ${profile.aiNotice || profile.x || profile.artistLinks?.length ? html`<section class="intro">
   ${profile.aiNotice ? html`<p class="ai-notice" lang="en">${profile.aiNotice}</p>` : ""}
@@ -193,21 +208,22 @@ function releasePage(ctx, r) {
   const { site, profile, today, lang } = ctx;
   const tr = t(lang);
   const pageUrl = absUrl(profile, langPath(lang, releaseRest(r)));
-  const shareText = tr.shareText(site.artist.name, r.title, fmtDate(r.releaseDate));
+  const shareText = tr.shareText(site.artist.name, r.title, fmtRelease(r, tr));
   const body = html`<article ${withClass(stateAttrs(r, today), "hero release")}>
   <img class="hero-art" src="/${r.artwork}" alt="${r.title}" width="1200" height="1200">
   <div class="hero-info">
     <p class="eyebrow">${r.type}</p>
     <h1 class="title">${r.title}</h1>
     ${r.titleEn && r.titleEn !== r.title ? html`<p class="title-en" lang="en">${r.titleEn}</p>` : ""}
-    <p class="release-date">${tr.releaseOn(fmtDate(r.releaseDate))}</p>
+    ${r.releaseDate ? html`<p class="release-date">${tr.releaseOn(fmtDate(r.releaseDate))}</p>` : ""}
     ${upcomingBlock(r, tr)}
     <div class="when-released">${linkList(r, tr)}</div>
     <p>${ext(xShareUrl(shareText, pageUrl), tr.shareOnX, "btn", "x")}</p>
     ${profile.aiNotice ? html`<p class="ai-notice small" lang="en">${profile.aiNotice}</p>` : ""}
     <p><a class="back" href="${langPath(lang)}#discography">← Discography</a></p>
   </div>
-</article>`;
+</article>
+${videoBlock(r)}`;
   return layout(ctx, { rest: releaseRest(r), title: r.title, description: shareText, image: r.artwork, body });
 }
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T21:24:41.464Z",
+  "generatedAt": "2026-10-30T15:23:48.292Z",
   "artist": {
     "name": "NEKO KONEKO",
     "reading": null,
@@ -11,8 +11,20 @@
       "title": "NANNIMO-NAI",
       "titleEn": null,
       "type": "Single",
-      "releaseDate": "2026-10-30",
+      "releaseDate": "2026-11-20",
       "artwork": "assets/artwork/nannimo-nai.jpg",
+      "youtubeId": "Nj4Vc3hO-H4",
+      "preSaveUrl": null,
+      "links": []
+    },
+    {
+      "slug": "mada-mada",
+      "title": "MADA-MADA",
+      "titleEn": null,
+      "type": "Single",
+      "releaseDate": null,
+      "artwork": "assets/artwork/mada-mada.jpg",
+      "youtubeId": null,
       "preSaveUrl": null,
       "links": []
     }
